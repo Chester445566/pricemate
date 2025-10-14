@@ -1,0 +1,8 @@
+{
+  "name": "PriceMate Web",
+  "description": "An intelligent web application to get accurate price estimations for your used products. Simply upload a photo or enter details, and our AI-powered algorithm provides you with recommended, fast-sale, and maximum possible prices based on market data.",
+  "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiBmaWxsPSIjMEU3NDkwIiB2aWV3Qm94PSIwIDAgMjU2IDI1NiI+PHBhdGggZD0iTTIzNC4yLDExNC44LDE0MS4yLDIxLjhhMTIsMTIsMCwwLDAtMTcsMEwyOS44LDExNi4yYTEyLDEyLDAsMCwwLDAsMTdsOTQuNCw5NC40YTEyLDEyLDAsMCwwLDE3LDBsOTMtOTNBMTIsMTIsMCwwLDAsMjM0LjIsMTE0LjhaTTE4MCwxMDBhMTIsMTIsMCwxLDEsMTItMTJBMTIsMTIsMCwwLDEsMTgwLDEwMFoiPjwvcGF0aD48L3N2Zz4=",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
