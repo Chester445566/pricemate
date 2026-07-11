@@ -1,10 +1,11 @@
 import { EstimateFormData, EstimateResult } from '../types';
+import { getGeminiEstimate, getGeminiListingDescription } from './geminiPricingAgent';
 
-// --- Development Settings ---
-// Set to `true` to use mock data and bypass the need for a running local server.
-// Set to `false` to connect to the real backend API at API_BASE_URL.
-const MOCK_API = true;
-// --------------------------
+// --- Agent Mode ---
+// When an API_KEY is available, the app uses the Gemini-powered pricing agent directly.
+// When no API_KEY is set, it falls back to mock data for development.
+const USE_AGENT = !!process.env.API_KEY;
+// ------------------
 
 const API_BASE_URL = 'http://localhost:4000';
 
@@ -116,82 +117,94 @@ interface CreateEstimateResponse {
   id: string;
 }
 
+// In-memory cache for agent-generated estimates (keyed by a generated ID).
+// Capped to prevent unbounded growth in long-running sessions.
+const CACHE_MAX_SIZE = 50;
+const agentEstimateCache = new Map<string, EstimateResult>();
+let agentIdCounter = 0;
+
 export const apiService = {
   createEstimate: async (payload: CreateEstimatePayload): Promise<CreateEstimateResponse> => {
-    if (MOCK_API) {
-      console.log("--- MOCK API: createEstimate ---", payload);
-      await delay(500);
-      const mockId = `mock-estimate-${payload.category || 'default'}`;
-      return { id: mockId };
+    if (USE_AGENT) {
+      const result = await getGeminiEstimate(payload, payload.imageUri);
+      const id = `agent-estimate-${++agentIdCounter}`;
+      if (agentEstimateCache.size >= CACHE_MAX_SIZE) {
+        const oldest = agentEstimateCache.keys().next().value;
+        if (oldest) agentEstimateCache.delete(oldest);
+      }
+      agentEstimateCache.set(id, result);
+      return { id };
     }
 
-    return apiFetch<CreateEstimateResponse>('/api/estimates', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-    }, 'createEstimate');
+    // Mock fallback for development without API key
+    console.log("--- MOCK API: createEstimate ---", payload);
+    await delay(500);
+    const mockId = `mock-estimate-${payload.category || 'default'}`;
+    return { id: mockId };
   },
 
   getEstimate: async (id: string): Promise<EstimateResult> => {
-    if (MOCK_API) {
-        console.log("--- MOCK API: getEstimate ---", { id });
-        await delay(800);
-        return mockEstimates[id] || mockEstimates['mock-estimate-default'];
+    if (USE_AGENT) {
+      const cached = agentEstimateCache.get(id);
+      if (cached) {
+        return cached;
+      }
+      throw new Error('لم يتم العثور على التقدير. يرجى المحاولة مرة أخرى.');
     }
 
-    return apiFetch<EstimateResult>(`/api/estimates/${id}`, {}, 'getEstimate');
+    // Mock fallback
+    console.log("--- MOCK API: getEstimate ---", { id });
+    await delay(800);
+    return mockEstimates[id] || mockEstimates['mock-estimate-default'];
   },
 
   generateListingDescription: async (item: EstimateFormData, price: number): Promise<{title: string; description: string; hints: string[]}> => {
-    if (MOCK_API) {
-        console.log("--- MOCK API: generateListingDescription ---", { item, price });
-        await delay(400);
-        
-        const title = `${item.brand} ${item.model} ${item.year} حالة ${item.condition}`;
-        let description = `${title}\nملحقات: ${item.accessories || 'لا يوجد'}`;
-        
-        const hints = [
-            'التقاط صور في إضاءة جيدة ومن زوايا متعددة',
-            'كن صادقاً بشأن أي عيوب أو خدوش',
-            'استخدم تسعير البيع السريع لسرعة الإغلاق'
-        ];
-        
-        switch (item.category) {
-            case 'phones':
-                description += '\nصحة البطارية: ممتازة';
-                hints.unshift('اذكر نسبة صحة البطارية إن أمكن');
-                break;
-            case 'laptops':
-                description += '\nالمواصفات: Core i7, 16GB RAM, 512GB SSD';
-                hints.unshift('اذكر مواصفات الجهاز (RAM, سعة التخزين)');
-                break;
-            case 'tablets':
-                description += '\nمساحة التخزين: 128GB, واي فاي فقط';
-                hints.unshift('وضح إذا كان الجهاز يدعم شريحة اتصال أم واي فاي فقط');
-                break;
-            case 'gaming_consoles':
-                description += '\nيأتي مع يد تحكم واحدة وأسطوانة لعبة FIFA 23';
-                hints.unshift('اذكر الألعاب أو الملحقات الإضافية المرفقة');
-                break;
-            case 'cameras':
-                description += '\nمع عدسة 18-55mm الأصلية';
-                hints.unshift('اذكر نوع العدسة المرفقة وعدد الشاتر إن أمكن');
-                break;
-        }
-
-        description += `\nالموقع: ${item.region}\nالسعر: ${price} ريال`;
-
-        return { 
-            title, 
-            description, 
-            hints
-        };
+    if (USE_AGENT) {
+      return getGeminiListingDescription(item, price);
     }
-    
-    return apiFetch<{title: string; description: string; hints: string[]}>('/api/listings/publish', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ item, price }),
-    }, 'generateListingDescription');
+
+    // Mock fallback
+    console.log("--- MOCK API: generateListingDescription ---", { item, price });
+    await delay(400);
+
+    const title = `${item.brand} ${item.model} ${item.year} حالة ${item.condition}`;
+    let description = `${title}\nملحقات: ${item.accessories || 'لا يوجد'}`;
+
+    const hints = [
+        'التقاط صور في إضاءة جيدة ومن زوايا متعددة',
+        'كن صادقاً بشأن أي عيوب أو خدوش',
+        'استخدم تسعير البيع السريع لسرعة الإغلاق'
+    ];
+
+    switch (item.category) {
+        case 'phones':
+            description += '\nصحة البطارية: ممتازة';
+            hints.unshift('اذكر نسبة صحة البطارية إن أمكن');
+            break;
+        case 'laptops':
+            description += '\nالمواصفات: Core i7, 16GB RAM, 512GB SSD';
+            hints.unshift('اذكر مواصفات الجهاز (RAM, سعة التخزين)');
+            break;
+        case 'tablets':
+            description += '\nمساحة التخزين: 128GB, واي فاي فقط';
+            hints.unshift('وضح إذا كان الجهاز يدعم شريحة اتصال أم واي فاي فقط');
+            break;
+        case 'gaming_consoles':
+            description += '\nيأتي مع يد تحكم واحدة وأسطوانة لعبة FIFA 23';
+            hints.unshift('اذكر الألعاب أو الملحقات الإضافية المرفقة');
+            break;
+        case 'cameras':
+            description += '\nمع عدسة 18-55mm الأصلية';
+            hints.unshift('اذكر نوع العدسة المرفقة وعدد الشاتر إن أمكن');
+            break;
+    }
+
+    description += `\nالموقع: ${item.region}\nالسعر: ${price} ريال`;
+
+    return {
+        title,
+        description,
+        hints
+    };
   }
 };
