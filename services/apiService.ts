@@ -117,8 +117,10 @@ interface CreateEstimateResponse {
   id: string;
 }
 
-// In-memory cache for agent-generated estimates (keyed by a generated ID)
-const agentEstimateCache: Record<string, EstimateResult> = {};
+// In-memory cache for agent-generated estimates (keyed by a generated ID).
+// Capped to prevent unbounded growth in long-running sessions.
+const CACHE_MAX_SIZE = 50;
+const agentEstimateCache = new Map<string, EstimateResult>();
 let agentIdCounter = 0;
 
 export const apiService = {
@@ -126,7 +128,11 @@ export const apiService = {
     if (USE_AGENT) {
       const result = await getGeminiEstimate(payload, payload.imageUri);
       const id = `agent-estimate-${++agentIdCounter}`;
-      agentEstimateCache[id] = result;
+      if (agentEstimateCache.size >= CACHE_MAX_SIZE) {
+        const oldest = agentEstimateCache.keys().next().value;
+        if (oldest) agentEstimateCache.delete(oldest);
+      }
+      agentEstimateCache.set(id, result);
       return { id };
     }
 
@@ -139,7 +145,7 @@ export const apiService = {
 
   getEstimate: async (id: string): Promise<EstimateResult> => {
     if (USE_AGENT) {
-      const cached = agentEstimateCache[id];
+      const cached = agentEstimateCache.get(id);
       if (cached) {
         return cached;
       }

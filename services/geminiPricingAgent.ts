@@ -159,7 +159,11 @@ export async function getGeminiEstimate(
     },
   });
 
-  const raw = JSON.parse(response.text.trim());
+  const text = response.text;
+  if (!text) {
+    throw new Error("لم يتمكن النموذج من إنشاء تقدير. يرجى المحاولة مرة أخرى.");
+  }
+  const raw = JSON.parse(text.trim());
 
   const median = raw.recommended;
   const p25 = Math.round(median * 0.93);
@@ -221,5 +225,9 @@ Write the title and description in Arabic. The description should be detailed, h
     },
   });
 
-  return JSON.parse(response.text.trim());
+  const text = response.text;
+  if (!text) {
+    throw new Error("لم يتمكن النموذج من إنشاء وصف الإعلان. يرجى المحاولة مرة أخرى.");
+  }
+  return JSON.parse(text.trim());
 }
