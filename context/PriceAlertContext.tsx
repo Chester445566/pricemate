@@ -27,9 +27,12 @@ export const PriceAlertProvider: React.FC<{ children: ReactNode }> = ({ children
   }, [alerts]);
 
   const addAlert = (alert: Omit<PriceAlert, 'id' | 'createdAt' | 'triggered'>) => {
+    const id = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const newAlert: PriceAlert = {
       ...alert,
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id,
       createdAt: new Date().toISOString(),
       triggered: alert.currentEstimate <= alert.targetPrice,
     };

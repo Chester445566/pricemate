@@ -22,7 +22,7 @@ const PriceAlertModal: React.FC<PriceAlertModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const price = Number(targetPrice);
-    if (!targetPrice || isNaN(price) || price <= 0) {
+    if (isNaN(price) || price <= 0) {
       setError('الرجاء إدخال سعر صحيح أكبر من صفر');
       return;
     }

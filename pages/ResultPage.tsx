@@ -76,9 +76,9 @@ const ResultPage: React.FC = () => {
 
   const handleAlertConfirm = (targetPrice: number) => {
     if (!formData || !result) return;
-    const productName = `${formData.brand} ${formData.model} ${formData.year}`.trim();
+    const productName = `${formData.brand} ${formData.model} ${formData.year}`.trim() || 'منتج غير معروف';
     addAlert({
-      productName: productName || 'منتج غير معروف',
+      productName,
       category: formData.category,
       targetPrice,
       currentEstimate: result.prices.recommended,
