@@ -300,19 +300,13 @@ public class AgentAccessibilityService extends AccessibilityService {
         queue.add(AccessibilityNodeInfo.obtain(root));
         while (!queue.isEmpty()) {
             AccessibilityNodeInfo node = queue.removeFirst();
-            try {
-                if (matcher.matches(node)) {
-                    return node;
-                }
-                for (int index = 0; index < node.getChildCount(); index++) {
-                    AccessibilityNodeInfo child = node.getChild(index);
-                    if (child != null) {
-                        queue.addLast(child);
-                    }
-                }
-            } finally {
-                if (!queue.contains(node)) {
-                    // no-op, kept for clarity when returning matched nodes
+            if (matcher.matches(node)) {
+                return node;
+            }
+            for (int index = 0; index < node.getChildCount(); index++) {
+                AccessibilityNodeInfo child = node.getChild(index);
+                if (child != null) {
+                    queue.addLast(child);
                 }
             }
         }

@@ -21,8 +21,8 @@ View your app in AI Studio: https://ai.studio/apps/drive/1DdpSyFCum5VR0vKGl69-3q
 
 ## Android accessibility agent
 
-- Installable APK: `/home/runner/work/pricemate/pricemate/android-agent/pricemate-agent-debug.apk`
-- Source: `/home/runner/work/pricemate/pricemate/android-agent/app/src/main`
+- Installable APK: `android-agent/pricemate-agent-debug.apk`
+- Source: `android-agent/app/src/main`
 - The Android app is a consent-based accessibility helper. After installing it, you must manually enable **PriceMate Accessibility Agent** in Android Accessibility settings.
 
 ### What it can do
