@@ -3,6 +3,7 @@ package com.pricemate.accessibilityagent;
 import android.content.Intent;
 
 public final class AgentCommand {
+    public static final String INTERNAL_BROADCAST_PERMISSION = "com.pricemate.accessibilityagent.INTERNAL_BROADCAST";
     public static final String ACTION_AGENT_COMMAND = "com.pricemate.accessibilityagent.AGENT_COMMAND";
     public static final String ACTION_AGENT_RESULT = "com.pricemate.accessibilityagent.AGENT_RESULT";
 

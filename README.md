@@ -10,7 +10,7 @@ View your app in AI Studio: https://ai.studio/apps/drive/1DdpSyFCum5VR0vKGl69-3q
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+**Prerequisites:**  Node.js 20+
 
 
 1. Install dependencies:
@@ -55,7 +55,11 @@ rm -rf "$OUT"
 mkdir -p "$OUT/compiled" "$OUT/classes" "$OUT/dex"
 "$BT/aapt2" compile --dir "$APP/res" -o "$OUT/compiled"
 mapfile -t FLATS < <(find "$OUT/compiled" -name '*.flat' | sort)
-"$BT/aapt2" link -I "$ANDROID_JAR" --manifest "$APP/AndroidManifest.xml" --java "$OUT/gen" --auto-add-overlay --min-sdk-version 28 --target-sdk-version 35 --version-code 1 --version-name 1.0.0 -o "$OUT/base.apk" $(printf ' -R %q' "${FLATS[@]}")
+R_ARGS=()
+for flat in "${FLATS[@]}"; do
+  R_ARGS+=(-R "$flat")
+done
+"$BT/aapt2" link -I "$ANDROID_JAR" --manifest "$APP/AndroidManifest.xml" --java "$OUT/gen" --auto-add-overlay --min-sdk-version 28 --target-sdk-version 35 --version-code 1 --version-name 1.0.0 -o "$OUT/base.apk" "${R_ARGS[@]}"
 mapfile -t JAVA_SOURCES < <(find "$APP/java" "$OUT/gen" -name '*.java' | sort)
 javac -source 8 -target 8 -bootclasspath "$ANDROID_JAR" -d "$OUT/classes" "${JAVA_SOURCES[@]}"
 mapfile -t CLASS_FILES < <(find "$OUT/classes" -name '*.class' | sort)
