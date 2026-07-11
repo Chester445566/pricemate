@@ -120,7 +120,7 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(resultReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
         } else {
-            registerReceiver(resultReceiver, filter);
+            registerReceiver(resultReceiver, filter, AgentCommand.INTERNAL_BROADCAST_PERMISSION, null);
         }
         refreshStatus();
     }
@@ -145,7 +145,7 @@ public class MainActivity extends Activity {
             Toast.makeText(this, "Enable the accessibility service first.", Toast.LENGTH_SHORT).show();
             return;
         }
-        sendBroadcast(AgentCommand.intent(getPackageName(), type, argument));
+        sendBroadcast(AgentCommand.intent(getPackageName(), type, argument), AgentCommand.INTERNAL_BROADCAST_PERMISSION);
         if (!AgentCommand.TYPE_READ_SCREEN.equals(type)) {
             resultText.setText("Command sent: " + type);
         }

@@ -47,7 +47,7 @@ public class AgentAccessibilityService extends AccessibilityService {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(commandReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
         } else {
-            registerReceiver(commandReceiver, filter);
+            registerReceiver(commandReceiver, filter, AgentCommand.INTERNAL_BROADCAST_PERMISSION, null);
         }
         publishResult("Accessibility service connected and ready.");
     }
@@ -281,15 +281,15 @@ public class AgentAccessibilityService extends AccessibilityService {
     }
 
     private AccessibilityNodeInfo findClickableAncestor(AccessibilityNodeInfo node) {
-        AccessibilityNodeInfo current = node;
+        AccessibilityNodeInfo current = AccessibilityNodeInfo.obtain(node);
         while (current != null) {
             if (current.isClickable()) {
-                return AccessibilityNodeInfo.obtain(current);
+                AccessibilityNodeInfo clickable = AccessibilityNodeInfo.obtain(current);
+                current.recycle();
+                return clickable;
             }
             AccessibilityNodeInfo parent = current.getParent();
-            if (current != node) {
-                current.recycle();
-            }
+            current.recycle();
             current = parent;
         }
         return null;
@@ -301,7 +301,12 @@ public class AgentAccessibilityService extends AccessibilityService {
         while (!queue.isEmpty()) {
             AccessibilityNodeInfo node = queue.removeFirst();
             if (matcher.matches(node)) {
-                return node;
+                AccessibilityNodeInfo match = AccessibilityNodeInfo.obtain(node);
+                recycleNode(node);
+                while (!queue.isEmpty()) {
+                    recycleNode(queue.removeFirst());
+                }
+                return match;
             }
             for (int index = 0; index < node.getChildCount(); index++) {
                 AccessibilityNodeInfo child = node.getChild(index);
@@ -309,6 +314,7 @@ public class AgentAccessibilityService extends AccessibilityService {
                     queue.addLast(child);
                 }
             }
+            node.recycle();
         }
         return null;
     }
@@ -318,7 +324,7 @@ public class AgentAccessibilityService extends AccessibilityService {
         Intent intent = new Intent(AgentCommand.ACTION_AGENT_RESULT);
         intent.setPackage(getPackageName());
         intent.putExtra(AgentCommand.EXTRA_MESSAGE, message);
-        sendBroadcast(intent);
+        sendBroadcast(intent, AgentCommand.INTERNAL_BROADCAST_PERMISSION);
     }
 
     private interface NodeMatcher {
