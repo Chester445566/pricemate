@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">PriceMate Agent</string>
+    <string name="accessibility_service_label">PriceMate Accessibility Agent</string>
+    <string name="accessibility_service_description">Consent-based helper that can read the current screen, tap text targets, scroll, type into the focused field, and launch apps when you explicitly enable the service.</string>
+    <string name="status_title">Accessibility Agent Control Panel</string>
+    <string name="status_enabled">Accessibility service is enabled.</string>
+    <string name="status_disabled">Accessibility service is disabled. Enable it in system settings before sending commands.</string>
+    <string name="button_open_settings">Open Accessibility Settings</string>
+    <string name="button_refresh_status">Refresh Status</string>
+    <string name="button_read_screen">Read Current Screen</string>
+    <string name="button_tap_text">Tap Visible Text</string>
+    <string name="button_type_text">Type In Focused Field</string>
+    <string name="button_scroll_forward">Scroll Forward</string>
+    <string name="button_scroll_backward">Scroll Backward</string>
+    <string name="button_back">Back</string>
+    <string name="button_home">Home</string>
+    <string name="button_recents">Recents</string>
+    <string name="button_open_app">Open App Package</string>
+    <string name="hint_target_text">Visible text to match</string>
+    <string name="hint_input_text">Text to type into the focused input</string>
+    <string name="hint_package_name">App package name, e.g. com.android.settings</string>
+    <string name="last_result_title">Last Result</string>
+    <string name="usage_notes">This agent only works after you manually enable the Accessibility service. It cannot bypass the lock screen, approve privileged prompts on its own, or enable permissions automatically.</string>
+</resources>
