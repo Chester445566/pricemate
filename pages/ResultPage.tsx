@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/apiService';
 import { useEstimate } from '../context/EstimateContext';
+import { usePriceAlerts } from '../context/PriceAlertContext';
 import { EstimateResult } from '../types';
 import Spinner from '../components/Spinner';
 import PriceCard from '../components/PriceCard';
@@ -9,11 +10,13 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import RatingScale from '../components/RatingScale';
 import FeedbackRating from '../components/FeedbackRating';
+import PriceAlertModal from '../components/PriceAlertModal';
 
 const ResultPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { formData, clearState } = useEstimate();
+  const { addAlert } = usePriceAlerts();
   
   const [result, setResult] = useState<EstimateResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,6 +25,9 @@ const ResultPage: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [listing, setListing] = useState<{ title: string; description: string; hints: string[] } | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
+
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [alertSaved, setAlertSaved] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -66,6 +72,19 @@ const ResultPage: React.FC = () => {
   const handleStartOver = () => {
     clearState();
     navigate('/');
+  };
+
+  const handleAlertConfirm = (targetPrice: number) => {
+    if (!formData || !result) return;
+    const productName = `${formData.brand} ${formData.model} ${formData.year}`.trim() || 'منتج غير معروف';
+    addAlert({
+      productName,
+      category: formData.category,
+      targetPrice,
+      currentEstimate: result.prices.recommended,
+    });
+    setShowAlertModal(false);
+    setAlertSaved(true);
   };
   
   const renderAdjustment = (key: string, value: number) => {
@@ -123,6 +142,25 @@ const ResultPage: React.FC = () => {
         </div>
       </div>
 
+      <Card>
+        <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200 mb-2">تنبيه السعر</h3>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+          احفظ تنبيهاً لمتابعة إذا وصل السعر إلى هدفك.
+        </p>
+        {alertSaved ? (
+          <div className="flex items-center gap-2 text-green-600 dark:text-green-400 text-sm font-medium">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            تم حفظ التنبيه
+          </div>
+        ) : (
+          <Button onClick={() => setShowAlertModal(true)} variant="secondary">
+            🔔 ضبط تنبيه سعر
+          </Button>
+        )}
+      </Card>
+
       {result.adjustments && (
         <Card>
             <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200 mb-3">عوامل التسعير</h3>
@@ -169,6 +207,16 @@ const ResultPage: React.FC = () => {
             بدء تقييم جديد
         </Button>
       </div>
+
+      {showAlertModal && formData && result && (
+        <PriceAlertModal
+          productName={`${formData.brand} ${formData.model} ${formData.year}`.trim()}
+          category={formData.category}
+          currentEstimate={result.prices.recommended}
+          onConfirm={handleAlertConfirm}
+          onClose={() => setShowAlertModal(false)}
+        />
+      )}
     </div>
   );
 };
