@@ -36,3 +36,13 @@ export interface EstimateResult {
   stats: Stats;
   adjustments?: Adjustments;
 }
+
+export interface PriceAlert {
+  id: string;
+  productName: string;
+  category: string;
+  targetPrice: number;
+  currentEstimate: number;
+  createdAt: string;
+  triggered: boolean;
+}
